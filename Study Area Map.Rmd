@@ -1,0 +1,87 @@
+---
+title: "Study Area Map"
+author: "Musab Isak"
+date: "2023-08-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Load packages**
+
+```{r}
+library(tidyverse)             #provide tools for data manipulation 
+library(ggplot2)               #Used for creating intricate and customizable data visualizations 
+library(dplyr)                 #Offers a set of functions for efficient data manipulation
+library(sf)                    #Provides tools for working with spatial data 
+library(rnaturalearth)         #Allows you to access and retrieve geographical data from the Natural earth dataset for mapping and analysis.
+library(rnaturalearthdata)     # Provides functions to load and manage Natural Earth data within R
+library(raster)                #Focuses on the manipulation and analysis of gridded spatial data
+library(viridis)               #Offers a set of perceptually uniform color scales for creating informative and visually appealing visualizations.
+library(ggspatial)             #Extends ggplot2 for spatial data, allowing you to combine the power of ggplot2 with spatial visualizations and data.
+```
+
+**Get Shape Data of the country and study areas**
+
+```{r}
+turkey <- st_as_sf(getData("GADM", level = 1, country = "TUR")) 
+# level 1 refers first level of administrative divisions, it could correspond to major regions or states within the country, like provinces or states in some other countries. 
+turkey1 <- st_as_sf(getData("GADM", level = 2, country = "TUR")) 
+#level 2 refers second level of administrative divisions within a country.  It's a more detailed breakdown of administrative regions. 
+trapzon <- st_as_sf(subset(turkey1, NAME_1== "Trabzon")) #This object likely contains the spatial information for the administrative region named "Trabzon."
+giresun <- st_as_sf(subset(turkey1, NAME_1== "Giresun"))
+ordu <- st_as_sf(subset(turkey1, NAME_1== "Ordu"))
+samsun <- st_as_sf(subset(turkey1, NAME_1== "Samsun"))
+```
+
+**Plot Location without legend names**
+
+```{r}
+turkey_ggplot <- ggplot() +
+  geom_sf(data = turkey, aes(fill = "Turkey")) +
+  geom_sf(data = subset(turkey1, NAME_1 == "Trabzon"), fill = "yellow") + 
+  geom_sf(data = subset(turkey1, NAME_1 == "Ordu"), fill = "green") +
+  geom_sf(data = subset(turkey1, NAME_1 == "Samsun"), fill = "skyblue") +
+  geom_sf(data = subset(turkey1, NAME_1 == "Giresun"), fill = "purple") +
+  geom_rect(aes(xmin = 35, xmax = 41, ymin = 40, ymax = 41.8), color = "black", fill = NA) +
+  scale_fill_manual(values = "pink") +
+  theme_minimal() +
+  theme(plot.background = element_blank())
+
+print(turkey_ggplot)
+```
+
+**Plot Location with legend names**
+
+```{r}
+# Create a new data frame for the legend
+legend_data <- data.frame(
+  City = c("Trabzon", "Ordu", "Samsun", "Giresun"),
+  Color = c("yellow", "green", "skyblue", "purple")
+)
+
+turkey_ggplot <- ggplot() +
+  geom_sf(data = turkey, aes(fill = "Turkey")) +
+  geom_sf(data = subset(turkey1, NAME_1 %in% c("Trabzon", "Ordu", "Samsun", "Giresun")), aes(fill = NAME_1)) +
+  geom_rect(aes(xmin = 35, xmax = 41, ymin = 40, ymax = 41.8), color = "black", fill = NA) +
+  scale_fill_manual(values = c("Turkey" = "pink", "Trabzon" = "yellow", "Ordu" = "green", "Samsun" = "skyblue", "Giresun" = "purple"),
+                    guide = guide_legend(override.aes = list(fill = "white"))) +
+  theme_minimal() +
+  theme(plot.background = element_blank()) +
+  guides(fill = guide_legend(title = "Cities", label.theme = element_text(color = "black", face = "bold"))) + labs(title = "STUDY AREA")
+
+print(turkey_ggplot)
+```
+
+
+**NOTE** You can add Annotation and scalebar by using *scalebar()* function and *annotation_north_arrow()* if you are interested in.
+
+
+
+
+
+
+
+
